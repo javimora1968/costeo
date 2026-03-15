@@ -1,0 +1,58 @@
+Library: C:\profits6\costeo\objbase.pbl
+    Object: w_vania_tabla
+        Event: dw_control::ue_entrar
+            (0002): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+        Event: dw_control::itemerror
+            (0006): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+        Event: dw_control::dberror
+            (0005): Warning     C0150: Function 'dbErrorCode' is obsolete.  The database error code is now available as an event argument.
+            (0024): Warning     C0150: Function 'dbErrorMessage' is obsolete.  The database error message is now available as an event argument.
+            (0026): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+Library: C:\profits6\costeo\basicas.pbl
+    Object: w_cs_asccion_cstos
+        Event: dw_control::itemchanged
+            (0048): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0057): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+Library: C:\profits6\costeo\transac.pbl
+    Object: w_cs_acumula
+        Function: w_cs_acumula::wf_insertar_uno_varios
+            (0001): Information C0146: The identifier 'usuario' conflicts with an existing global variable with this name.  The new definition of 'usuario' will take precedence and the prior value will be ignored until this version of 'usuario' goes out of scope
+    Object: w_cs_reg_consumo_alimento
+        Event: dw_consumo::itemerror
+            (0006): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+        Event: dw_consumo::itemchanged
+            (0034): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0038): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0067): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0070): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0099): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0102): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0110): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0133): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0136): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0145): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0168): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0171): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+        Event: dw_consumo::dberror
+            (0006): Warning     C0150: Function 'dbErrorCode' is obsolete.  The database error code is now available as an event argument.
+            (0025): Warning     C0150: Function 'dbErrorMessage' is obsolete.  The database error message is now available as an event argument.
+            (0027): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+    Object: w_cs_programa_alimento
+        Event: dw_programa::itemchanged
+            (0063): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0066): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0074): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0097): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0100): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+        Event: dw_programa::dberror
+            (0006): Warning     C0150: Function 'dbErrorCode' is obsolete.  The database error code is now available as an event argument.
+            (0025): Warning     C0150: Function 'dbErrorMessage' is obsolete.  The database error message is now available as an event argument.
+            (0027): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+        Event: dw_semanas::itemerror
+            (0006): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+        Event: dw_semanas::itemchanged
+            (0021): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0030): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0039): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0045): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.
+            (0053): Warning     C0150: Function 'SetActionCode' is obsolete.  Use the keyword RETURN followed by the Action Code value to set.

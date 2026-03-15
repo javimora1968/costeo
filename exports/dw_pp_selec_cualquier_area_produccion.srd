@@ -1,0 +1,12 @@
+$PBExportHeader$dw_pp_selec_cualquier_area_produccion.srd
+release 6;
+datawindow(units=0 timer_interval=0 color=8421376 processing=0 print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.prompt=no print.buttons=no print.preview.buttons=no )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=92 color="536870912" )
+table(column=(type=char(10) updatewhereclause=yes name=id_area dbname="pp_area_produccion.id_area" )
+ column=(type=char(60) updatewhereclause=yes name=descripcion dbname="pp_area_produccion.descripcion" )
+ retrieve="PBSELECT(TABLE(NAME=~"dba.pp_area_produccion~") COLUMN(NAME=~"dba.pp_area_produccion.id_area~")COLUMN(NAME=~"dba.pp_area_produccion.descripcion~"))" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="5" color="0" x="59" y="12" height="68" width="238" format="[general]"  name=id_area  tag=" " edit.limit=10 edit.case=upper edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="5" color="0" x="320" y="12" height="68" width="1559" format="[general]"  name=descripcion  tag=" " edit.limit=60 edit.case=upper edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" cellpadding="0" cellspacing="0" generatecss="no" nowrap="yes")  

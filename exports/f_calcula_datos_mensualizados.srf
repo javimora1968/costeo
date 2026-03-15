@@ -1,0 +1,417 @@
+$PBExportHeader$f_calcula_datos_mensualizados.srf
+global type f_calcula_datos_mensualizados from function_object
+end type
+
+forward prototypes
+global function boolean f_calcula_datos_mensualizados (string ls_tipo_doc, double ld_consecutivo, string ls_linea)
+end prototypes
+
+global function boolean f_calcula_datos_mensualizados (string ls_tipo_doc, double ld_consecutivo, string ls_linea);string ls_error
+datetime ldt_fecha_produccion,ldt_fecha_produccion_copia
+boolean lb_primera_vuelta,lb_resultado,lb_cambio_mes,lb_primera_semana
+double ld_aves_cria,ld_aves_levante,ld_aves_postura,ld_aves_replume,ld_huevos_semana,ld_pollas_semana,ld_consumo_cria,&
+ld_consumo_levante,ld_consumo_postura,ld_consumo_replume,ld_consumo_total,ld_costo_alimento,ld_otros_costos,&
+ld_venta_aves_desecho,ld_consumo_cria_machos,ld_consumo_levante_machos,ld_consumo_postura_machos,ld_consumo_replume_machos,&
+ld_costo_alimento_machos,ld_costo_alimento_levante,ld_costo_alimento_machos_levante,ld_costo_alimento_postura,&
+ld_costo_alimento_machos_postura,ld_costo_alimento_replume,ld_costo_alimento_machos_replume,&
+ld_aves_cria_copia,ld_aves_levante_copia,ld_aves_postura_copia,ld_aves_replume_copia,ld_huevos_semana_copia,&
+ld_pollas_semana_copia,ld_consumo_cria_copia,ld_consumo_levante_copia,ld_consumo_postura_copia,ld_consumo_replume_copia,&
+ld_consumo_total_copia,ld_costo_alimento_copia,ld_otros_costos_copia,ld_venta_aves_desecho_copia,&
+ld_consumo_cria_machos_copia,ld_consumo_levante_machos_copia,ld_consumo_postura_machos_copia,ld_consumo_replume_machos_copia,&
+ld_costo_alimento_machos_copia,ld_costo_alimento_levante_copia,ld_costo_alimento_machos_levante_copia,ld_costo_alimento_postura_copia,&
+ld_costo_alimento_machos_postura_copia,ld_costo_alimento_replume_copia,ld_costo_alimento_machos_replume_copia,&
+ld_diferencia,ld_diferencia_diaria,ld_dias_faltan,ld_proporcion,ld_incremento
+Double ld_huevos_semana_copia_acumulado,ld_pollas_semana_copia_acumulado,ld_consumo_cria_copia_acumulado,&
+ld_consumo_levante_copia_acumulado,ld_consumo_postura_copia_acumulado,ld_consumo_replume_copia_acumulado,&
+ld_consumo_total_copia_acumulado,ld_costo_alimento_copia_acumulado,ld_otros_costos_copia_acumulado,&
+ld_venta_aves_desecho_copia_acumulado,ld_consumo_cria_machos_copia_acumulado,ld_consumo_levante_machos_copia_acumulado,&
+ld_consumo_postura_machos_copia_acumulado,ld_consumo_replume_machos_copia_acumulado,ld_costo_alimento_machos_copia_acumulado,&
+ld_costo_alimento_levante_copia_acumulado,ld_costo_alimento_machos_levante_copia_acumulado,ld_costo_alimento_postura_copia_acumulado,&
+ld_costo_alimento_machos_postura_copia_acumulado,ld_costo_alimento_replume_copia_acumulado,&
+ld_costo_alimento_machos_replume_copia_acumulado
+integer li_mes_copia,li_ano_copia,li_dia_copia,li_dias_mes_copia,li_primer_dia_fecha_produccion
+
+ DECLARE cursor1 CURSOR FOR  
+  SELECT dba.cs_resul_items_simulaciones.fecha_produccion,   
+         dba.cs_resul_items_simulaciones.aves_cria,   
+         dba.cs_resul_items_simulaciones.aves_levante,   
+         dba.cs_resul_items_simulaciones.aves_postura,   
+         dba.cs_resul_items_simulaciones.aves_replume,   
+         dba.cs_resul_items_simulaciones.huevos_semana,   
+         dba.cs_resul_items_simulaciones.pollas_semana,   
+         dba.cs_resul_items_simulaciones.consumo_cria,   
+         dba.cs_resul_items_simulaciones.consumo_levante,   
+         dba.cs_resul_items_simulaciones.consumo_postura,   
+         dba.cs_resul_items_simulaciones.consumo_replume,   
+         dba.cs_resul_items_simulaciones.consumo_total,   
+         dba.cs_resul_items_simulaciones.costo_alimento,   
+         dba.cs_resul_items_simulaciones.otros_costos,  // 
+         dba.cs_resul_items_simulaciones.venta_aves_desecho,   //
+         dba.cs_resul_items_simulaciones.consumo_cria_machos,   
+         dba.cs_resul_items_simulaciones.consumo_levante_machos,   
+         dba.cs_resul_items_simulaciones.consumo_postura_machos,   
+         dba.cs_resul_items_simulaciones.consumo_replume_machos,   
+         dba.cs_resul_items_simulaciones.costo_alimento_machos,   
+         dba.cs_resul_items_simulaciones.costo_alimento_levante,   
+         dba.cs_resul_items_simulaciones.costo_alimento_machos_levante,   
+         dba.cs_resul_items_simulaciones.costo_alimento_postura, //  
+         dba.cs_resul_items_simulaciones.costo_alimento_machos_postura,  // 
+         dba.cs_resul_items_simulaciones.costo_alimento_replume,   
+         dba.cs_resul_items_simulaciones.costo_alimento_machos_replume
+    FROM dba.cs_resul_items_simulaciones  
+   WHERE ( dba.cs_resul_items_simulaciones.id_empresa = :empresa ) AND  
+         ( dba.cs_resul_items_simulaciones.tipo_doc = :ls_tipo_doc ) AND  
+         ( dba.cs_resul_items_simulaciones.consecutivo = :ld_consecutivo )  
+	ORDER BY dba.cs_resul_items_simulaciones.fecha_produccion ASC ;
+
+
+OPEN cursor1;
+IF sqlca.sqlcode <> 0 THEN
+	ls_error=sqlca.sqlerrtext
+	ROLLBACK using sqlca;
+	MessageBox("ERROR","No se pudo abrir cursor sobre la tabla: dba.cs_resul_items_simulaciones. Mensaje: "+ls_error,stopsign!)
+		
+	RETURN False
+END IF
+
+lb_primera_vuelta=True
+lb_primera_semana=True
+
+Do while sqlca.sqlcode =0 
+	
+	Fetch cursor1 into :ldt_fecha_produccion,:ld_aves_cria,:ld_aves_levante,:ld_aves_postura,:ld_aves_replume,:ld_huevos_semana,&
+	:ld_pollas_semana,:ld_consumo_cria,:ld_consumo_levante,:ld_consumo_postura,&
+	:ld_consumo_replume,:ld_consumo_total,:ld_costo_alimento,:ld_otros_costos,:ld_venta_aves_desecho,:ld_consumo_cria_machos,&
+	:ld_consumo_levante_machos,:ld_consumo_postura_machos,:ld_consumo_replume_machos,:ld_costo_alimento_machos,&
+	:ld_costo_alimento_levante,:ld_costo_alimento_machos_levante,:ld_costo_alimento_postura,:ld_costo_alimento_machos_postura,&
+	:ld_costo_alimento_replume,:ld_costo_alimento_machos_replume;
+	
+	IF sqlca.sqlcode <>0 Then
+		IF sqlca.sqlcode= -1 Then
+			ls_error=sqlca.sqlerrtext
+			ROLLBACK using sqlca;
+			MessageBox("ERROR","No se pudo leer registros de cursor sobre la tabla: dba.cs_resul_items_simulaciones. Mensaje: "+ls_error,stopsign!)
+			RETURN False
+			
+		
+		Else//se acabaron los registros
+		
+		
+		
+		
+			Continue
+		End IF
+		
+	End IF
+	
+	IF lb_primera_vuelta Then
+		ldt_fecha_produccion_copia=ldt_fecha_produccion
+		
+		lb_primera_vuelta=False
+	End IF
+	
+	IF month(date(ldt_fecha_produccion)) <> month(date(ldt_fecha_produccion_copia)) Then//hubo cambio de mes
+	
+		lb_cambio_mes=True
+	
+		li_mes_copia=month(date(ldt_fecha_produccion_copia))
+		li_ano_copia=year(date(ldt_fecha_produccion_copia))
+		li_dia_copia=day(date(ldt_fecha_produccion_copia))
+	
+		li_dias_mes_copia=diasdemes(li_mes_copia,li_ano_copia)
+		
+		IF li_dia_copia=li_dias_mes_copia Then //el corte de la semana anterior fue justo en fin de mes no es necesario 
+		//entonces hacer prorrateo
+		
+
+		Else//Hay que hacer prorrateo
+
+			ld_dias_faltan= (li_dias_mes_copia - li_dia_copia)
+
+			lb_resultado=f_prorrateo(ld_aves_cria,ld_aves_cria_copia,ld_dias_faltan)
+			
+			lb_resultado=f_prorrateo(ld_aves_levante,ld_aves_levante_copia,ld_dias_faltan)
+			lb_resultado=f_prorrateo(ld_aves_postura,ld_aves_postura_copia,ld_dias_faltan)
+			lb_resultado=f_prorrateo(ld_aves_replume,ld_aves_replume_copia,ld_dias_faltan)
+			
+			lb_resultado=f_prorrateo_diferencia(ld_huevos_semana,ld_huevos_semana_copia,ld_dias_faltan,ld_diferencia)
+			ld_huevos_semana_copia_acumulado=ld_huevos_semana_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_pollas_semana,ld_pollas_semana_copia,ld_dias_faltan,ld_diferencia)
+			ld_pollas_semana_copia_acumulado= ld_pollas_semana_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_consumo_cria,ld_consumo_cria_copia,ld_dias_faltan,ld_diferencia)
+			ld_consumo_cria_copia_acumulado= ld_consumo_cria_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_consumo_levante,ld_consumo_levante_copia,ld_dias_faltan,ld_diferencia)
+			ld_consumo_levante_copia_acumulado=ld_consumo_levante_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_consumo_postura,ld_consumo_postura_copia,ld_dias_faltan,ld_diferencia)
+			ld_consumo_postura_copia_acumulado= ld_consumo_postura_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_consumo_replume,ld_consumo_replume_copia,ld_dias_faltan,ld_diferencia)
+			ld_consumo_replume_copia_acumulado= ld_consumo_replume_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_consumo_total,ld_consumo_total_copia,ld_dias_faltan,ld_diferencia)
+			ld_consumo_total_copia_acumulado= ld_consumo_total_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_costo_alimento,ld_costo_alimento_copia,ld_dias_faltan,ld_diferencia)
+			ld_costo_alimento_copia_acumulado= ld_costo_alimento_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_otros_costos,ld_otros_costos_copia,ld_dias_faltan,ld_diferencia)
+			ld_otros_costos_copia_acumulado= ld_otros_costos_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_venta_aves_desecho,ld_venta_aves_desecho_copia,ld_dias_faltan,ld_diferencia)
+			ld_venta_aves_desecho_copia_acumulado= ld_venta_aves_desecho_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_consumo_cria_machos,ld_consumo_cria_machos_copia,ld_dias_faltan,ld_diferencia)
+			ld_consumo_cria_machos_copia_acumulado= ld_consumo_cria_machos_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_consumo_levante_machos,ld_consumo_levante_machos_copia,ld_dias_faltan,ld_diferencia)
+			ld_consumo_levante_machos_copia_acumulado= ld_consumo_levante_machos_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_consumo_postura_machos,ld_consumo_postura_machos_copia,ld_dias_faltan,ld_diferencia)
+			ld_consumo_postura_machos_copia_acumulado= ld_consumo_postura_machos_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_consumo_replume_machos,ld_consumo_replume_machos_copia,ld_dias_faltan,ld_diferencia)
+			ld_consumo_replume_machos_copia_acumulado= ld_consumo_replume_machos_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_costo_alimento_machos,ld_costo_alimento_machos_copia,ld_dias_faltan,ld_diferencia)
+			ld_costo_alimento_machos_copia_acumulado= ld_costo_alimento_machos_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_costo_alimento_levante,ld_costo_alimento_levante_copia,ld_dias_faltan,ld_diferencia)
+			ld_costo_alimento_levante_copia_acumulado= ld_costo_alimento_levante_copia_acumulado + ld_diferencia			
+			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_costo_alimento_machos_levante,ld_costo_alimento_machos_levante_copia,ld_dias_faltan,ld_diferencia)
+			ld_costo_alimento_machos_levante_copia_acumulado= ld_costo_alimento_machos_levante_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_costo_alimento_postura,ld_costo_alimento_postura_copia,ld_dias_faltan,ld_diferencia)
+			ld_costo_alimento_postura_copia_acumulado= ld_costo_alimento_postura_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_costo_alimento_machos_postura,ld_costo_alimento_machos_postura_copia,ld_dias_faltan,ld_diferencia)
+			ld_costo_alimento_machos_postura_copia_acumulado= ld_costo_alimento_machos_postura_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_costo_alimento_replume,ld_costo_alimento_replume_copia,ld_dias_faltan,ld_diferencia)
+			ld_costo_alimento_replume_copia_acumulado= ld_costo_alimento_replume_copia_acumulado + ld_diferencia			
+			
+			lb_resultado=f_prorrateo_diferencia(ld_costo_alimento_machos_replume,ld_costo_alimento_machos_replume_copia,ld_dias_faltan,ld_diferencia)
+			ld_costo_alimento_machos_replume_copia_acumulado= ld_costo_alimento_machos_replume_copia_acumulado +ld_diferencia
+		
+			
+		End IF
+		
+		
+		
+			ldt_fecha_produccion_copia=datetime(date(li_ano_copia,li_mes_copia,li_dias_mes_copia))
+		
+			INSERT INTO dba.cs_resul_simul_mensual  
+				( id_empresa,tipo_doc,consecutivo,fecha_produccion,id_linea,   
+				  aves_cria,aves_levante,aves_postura,aves_replume,huevos_semana,   
+				  pollas_semana,acum_huevos_semana,acum_pollas_semana,consumo_cria,consumo_levante,   
+				  consumo_postura,consumo_replume, consumo_total,costo_alimento,otros_costos,   
+				  venta_aves_desecho,consumo_acumulado,costo_acumulado, consumo_cria_machos,consumo_levante_machos,   
+				  consumo_postura_machos,consumo_replume_machos,costo_alimento_machos,consumo_acumulado_machos,costo_acumulado_machos,   
+				  costo_alimento_levante,costo_alimento_machos_levante,costo_alimento_postura,costo_alimento_machos_postura,costo_alimento_replume,   
+				  costo_alimento_machos_replume,otros_costos_levante,otros_costos_postura,otros_costos_replume )  
+			VALUES ( :empresa,:ls_tipo_doc,:ld_consecutivo,:ldt_fecha_produccion_copia,:ls_linea,   
+				  :ld_aves_cria_copia,:ld_aves_levante_copia,:ld_aves_postura_copia,:ld_aves_replume_copia,:ld_huevos_semana_copia_acumulado,
+				  :ld_pollas_semana_copia_acumulado,0,0,:ld_consumo_cria_copia_acumulado,:ld_consumo_levante_copia_acumulado,
+				  :ld_consumo_postura_copia_acumulado,:ld_consumo_replume_copia_acumulado,:ld_consumo_total_copia_acumulado,:ld_costo_alimento_copia_acumulado,:ld_otros_costos_copia_acumulado,
+				  :ld_venta_aves_desecho_copia_acumulado,0,0,:ld_consumo_cria_machos_copia_acumulado,:ld_consumo_levante_machos_copia_acumulado,
+				  :ld_consumo_postura_machos_copia_acumulado,:ld_consumo_replume_machos_copia_acumulado,:ld_costo_alimento_machos_copia_acumulado,0,0,  
+				  :ld_costo_alimento_levante_copia_acumulado,:ld_costo_alimento_machos_levante_copia_acumulado,:ld_costo_alimento_postura_copia_acumulado,:ld_costo_alimento_machos_postura_copia_acumulado,:ld_costo_alimento_replume_copia_acumulado,   //			  
+				  :ld_costo_alimento_machos_replume_copia_acumulado,0,0,0 ); 
+				  
+			IF sqlca.sqlcode <>0 Then
+				ls_error=sqlca.sqlerrtext
+				Rollback using sqlca;
+				Messagebox("Error","NO se pudo insertar registros sobre la tabla: dba.cs_resul_simul_mensual . "+&
+				+"Mensaje: "+ls_error,Stopsign!)
+				Return False
+				
+			End IF
+			
+			lb_primera_semana=True
+			
+	Else		
+		
+		lb_cambio_mes=False//no hubo cambio de mes
+		
+		IF not(lb_primera_semana) Then
+		
+			ld_huevos_semana_copia_acumulado=ld_huevos_semana_copia_acumulado + ld_huevos_semana	
+			ld_pollas_semana_copia_acumulado= ld_pollas_semana_copia_acumulado + ld_pollas_semana
+			ld_consumo_cria_copia_acumulado= ld_consumo_cria_copia_acumulado + ld_consumo_cria
+			ld_consumo_levante_copia_acumulado=ld_consumo_levante_copia_acumulado + ld_consumo_levante
+			ld_consumo_postura_copia_acumulado= ld_consumo_postura_copia_acumulado + ld_consumo_postura
+			ld_consumo_replume_copia_acumulado= ld_consumo_replume_copia_acumulado + ld_consumo_replume
+			ld_consumo_total_copia_acumulado= ld_consumo_total_copia_acumulado + ld_consumo_total
+			ld_costo_alimento_copia_acumulado= ld_costo_alimento_copia_acumulado + ld_costo_alimento
+			ld_otros_costos_copia_acumulado= ld_otros_costos_copia_acumulado + ld_otros_costos
+			ld_venta_aves_desecho_copia_acumulado= ld_venta_aves_desecho_copia_acumulado + ld_venta_aves_desecho
+			ld_consumo_cria_machos_copia_acumulado= ld_consumo_cria_machos_copia_acumulado + ld_consumo_cria_machos
+			ld_consumo_levante_machos_copia_acumulado= ld_consumo_levante_machos_copia_acumulado + ld_consumo_levante_machos
+			ld_consumo_postura_machos_copia_acumulado= ld_consumo_postura_machos_copia_acumulado + ld_consumo_postura_machos
+			ld_consumo_replume_machos_copia_acumulado= ld_consumo_replume_machos_copia_acumulado + ld_consumo_replume_machos
+			ld_costo_alimento_machos_copia_acumulado= ld_costo_alimento_machos_copia_acumulado + ld_costo_alimento_machos
+			ld_costo_alimento_levante_copia_acumulado= ld_costo_alimento_levante_copia_acumulado + ld_costo_alimento_levante
+			ld_costo_alimento_machos_levante_copia_acumulado= ld_costo_alimento_machos_levante_copia_acumulado + ld_costo_alimento_machos_levante
+			ld_costo_alimento_postura_copia_acumulado= ld_costo_alimento_postura_copia_acumulado + ld_costo_alimento_postura
+			ld_costo_alimento_machos_postura_copia_acumulado= ld_costo_alimento_machos_postura_copia_acumulado + ld_costo_alimento_machos_postura
+			ld_costo_alimento_replume_copia_acumulado= ld_costo_alimento_replume_copia_acumulado + ld_costo_alimento_replume
+			ld_costo_alimento_machos_replume_copia_acumulado= ld_costo_alimento_machos_replume_copia_acumulado +ld_costo_alimento_machos_replume
+			
+		End IF
+		
+		
+	//	lb_primera_semana=False
+	
+	End IF
+	
+	
+	IF lb_primera_semana Then 
+		
+		li_primer_dia_fecha_produccion=DAY(date(ldt_fecha_produccion))		
+		
+		lb_resultado=f_prorrateo_produccion_consumo(ld_huevos_semana,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_pollas_semana,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_consumo_cria,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_consumo_levante,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_consumo_postura,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_consumo_replume,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_consumo_total,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_costo_alimento,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_otros_costos,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_venta_aves_desecho,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_consumo_cria_machos,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_consumo_levante_machos,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_consumo_postura_machos,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_consumo_replume_machos,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_costo_alimento_machos,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_costo_alimento_levante,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_costo_alimento_machos_levante,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_costo_alimento_postura,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_costo_alimento_machos_postura,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_costo_alimento_replume,li_primer_dia_fecha_produccion)
+		lb_resultado=f_prorrateo_produccion_consumo(ld_costo_alimento_machos_replume,li_primer_dia_fecha_produccion)		
+		
+	//	lb_primera_semana=False
+		
+	End IF
+	
+	//se saca copia de las variables actuales
+	ldt_fecha_produccion_copia=ldt_fecha_produccion
+	ld_aves_cria_copia=ld_aves_cria
+	ld_aves_levante_copia=ld_aves_levante
+	ld_aves_postura_copia=ld_aves_postura
+	ld_aves_replume_copia=ld_aves_replume
+	
+	ld_huevos_semana_copia= ld_huevos_semana
+	ld_pollas_semana_copia= ld_pollas_semana
+	ld_consumo_cria_copia= ld_consumo_cria
+	ld_consumo_levante_copia=ld_consumo_levante
+	ld_consumo_postura_copia= ld_consumo_postura
+	ld_consumo_replume_copia= ld_consumo_replume
+	ld_consumo_total_copia= ld_consumo_total
+	ld_costo_alimento_copia= ld_costo_alimento
+	ld_otros_costos_copia= ld_otros_costos
+	ld_venta_aves_desecho_copia= ld_venta_aves_desecho
+	ld_consumo_cria_machos_copia= ld_consumo_cria_machos
+	ld_consumo_levante_machos_copia= ld_consumo_levante_machos
+	ld_consumo_postura_machos_copia= ld_consumo_postura_machos
+	ld_consumo_replume_machos_copia= ld_consumo_replume_machos
+	ld_costo_alimento_machos_copia= ld_costo_alimento_machos
+	ld_costo_alimento_levante_copia= ld_costo_alimento_levante
+	ld_costo_alimento_machos_levante_copia= ld_costo_alimento_machos_levante
+	ld_costo_alimento_postura_copia= ld_costo_alimento_postura
+	ld_costo_alimento_machos_postura_copia= ld_costo_alimento_machos_postura
+	ld_costo_alimento_replume_copia= ld_costo_alimento_replume
+	ld_costo_alimento_machos_replume_copia= ld_costo_alimento_machos_replume
+	
+	IF lb_primera_semana Then 
+		
+		ld_huevos_semana_copia_acumulado=ld_huevos_semana
+		ld_pollas_semana_copia_acumulado= ld_pollas_semana
+		ld_consumo_cria_copia_acumulado= ld_consumo_cria
+		ld_consumo_levante_copia_acumulado=ld_consumo_levante
+		ld_consumo_postura_copia_acumulado= ld_consumo_postura
+		ld_consumo_replume_copia_acumulado= ld_consumo_replume
+		ld_consumo_total_copia_acumulado= ld_consumo_total
+		ld_costo_alimento_copia_acumulado= ld_costo_alimento
+		ld_otros_costos_copia_acumulado= ld_otros_costos
+		ld_venta_aves_desecho_copia_acumulado= ld_venta_aves_desecho
+		ld_consumo_cria_machos_copia_acumulado= ld_consumo_cria_machos
+		ld_consumo_levante_machos_copia_acumulado= ld_consumo_levante_machos
+		ld_consumo_postura_machos_copia_acumulado= ld_consumo_postura_machos
+		ld_consumo_replume_machos_copia_acumulado= ld_consumo_replume_machos
+		ld_costo_alimento_machos_copia_acumulado= ld_costo_alimento_machos
+		ld_costo_alimento_levante_copia_acumulado= ld_costo_alimento_levante
+		ld_costo_alimento_machos_levante_copia_acumulado= ld_costo_alimento_machos_levante
+		ld_costo_alimento_postura_copia_acumulado= ld_costo_alimento_postura
+		ld_costo_alimento_machos_postura_copia_acumulado= ld_costo_alimento_machos_postura
+		ld_costo_alimento_replume_copia_acumulado= ld_costo_alimento_replume
+		ld_costo_alimento_machos_replume_copia_acumulado= ld_costo_alimento_machos_replume
+		
+		lb_primera_semana=False	
+
+	eND if
+
+	//Else
+		
+		
+//	End IF
+	
+	
+Loop
+
+//Se procesa ultimo registro siempre y cuando no se haya presentado cambio de mes en el registro inmediatamente
+//anterior. Este seria el caso en el que la simulacion terminara justo en la primera semana de un mes.
+//aqui lo unico que se hace es insertar el ultimo registro con la fecha normal que traia y con los valores
+//que traia
+
+//IF not(lb_cambio_mes) Then
+	
+	//li_mes_copia=month(date(ldt_fecha_produccion_copia))
+	//li_ano_copia=year(date(ldt_fecha_produccion_copia))
+	//li_dia_copia=day(date(ldt_fecha_produccion_copia))
+
+	//li_dias_mes_copia=diasdemes(li_mes_copia,li_ano_copia)
+	
+	//ldt_fecha_produccion_copia=datetime(date(li_ano_copia,li_mes_copia,li_dias_mes_copia))
+
+	INSERT INTO dba.cs_resul_simul_mensual  
+		( id_empresa,tipo_doc,consecutivo,fecha_produccion,id_linea,   
+		  aves_cria,aves_levante,aves_postura,aves_replume,huevos_semana,   
+		  pollas_semana,acum_huevos_semana,acum_pollas_semana,consumo_cria,consumo_levante,   
+		  consumo_postura,consumo_replume, consumo_total,costo_alimento,otros_costos,   
+		  venta_aves_desecho,consumo_acumulado,costo_acumulado, consumo_cria_machos,consumo_levante_machos,   
+		  consumo_postura_machos,consumo_replume_machos,costo_alimento_machos,consumo_acumulado_machos,costo_acumulado_machos,   
+		  costo_alimento_levante,costo_alimento_machos_levante,costo_alimento_postura,costo_alimento_machos_postura,costo_alimento_replume,   
+		  costo_alimento_machos_replume,otros_costos_levante,otros_costos_postura,otros_costos_replume )  
+	VALUES ( :empresa,:ls_tipo_doc,:ld_consecutivo,:ldt_fecha_produccion_copia,:ls_linea,   
+		  :ld_aves_cria_copia,:ld_aves_levante_copia,:ld_aves_postura_copia,:ld_aves_replume_copia,:ld_huevos_semana_copia_acumulado,
+		  :ld_pollas_semana_copia_acumulado,0,0,:ld_consumo_cria_copia_acumulado,:ld_consumo_levante_copia_acumulado,
+		  :ld_consumo_postura_copia_acumulado,:ld_consumo_replume_copia_acumulado,:ld_consumo_total_copia_acumulado,:ld_costo_alimento_copia_acumulado,:ld_otros_costos_copia_acumulado,
+		  :ld_venta_aves_desecho_copia_acumulado,0,0,:ld_consumo_cria_machos_copia_acumulado,:ld_consumo_levante_machos_copia_acumulado,
+		  :ld_consumo_postura_machos_copia_acumulado,:ld_consumo_replume_machos_copia_acumulado,:ld_costo_alimento_machos_copia_acumulado,0,0,  
+		  :ld_costo_alimento_levante_copia_acumulado,:ld_costo_alimento_machos_levante_copia_acumulado,:ld_costo_alimento_postura_copia_acumulado,:ld_costo_alimento_machos_postura_copia_acumulado,:ld_costo_alimento_replume_copia_acumulado,   //			  
+		  :ld_costo_alimento_machos_replume_copia_acumulado,0,0,0 ); 
+		  
+	IF sqlca.sqlcode <>0 Then
+		ls_error=sqlca.sqlerrtext
+		Rollback using sqlca;
+		Messagebox("Error","NO se pudo insertar registros sobre la tabla: dba.cs_resul_simul_mensual . "+&
+		+"Mensaje: "+ls_error,Stopsign!)
+		Return False
+		
+	End IF
+	
+//End IF
+
+			
+Commit using sqlca;
+
+Return True
+
+end function

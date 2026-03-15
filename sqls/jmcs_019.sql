@@ -1,0 +1,1 @@
+grant all on dba.cs_tipos_estandares to digitadores;

@@ -1,0 +1,15 @@
+$PBExportHeader$f_prorrateo_produccion_consumo.srf
+global type f_prorrateo_produccion_consumo from function_object
+end type
+
+forward prototypes
+global function boolean f_prorrateo_produccion_consumo (ref double ld_variable, integer li_primer_dia)
+end prototypes
+
+global function boolean f_prorrateo_produccion_consumo (ref double ld_variable, integer li_primer_dia);
+
+ld_variable=Round((ld_variable / 7) *li_primer_dia,0)
+
+
+Return True
+end function

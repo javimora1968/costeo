@@ -1,0 +1,311 @@
+$PBExportHeader$f_calcula_datos_mensualizados_poblacion.srf
+global type f_calcula_datos_mensualizados_poblacion from function_object
+end type
+
+forward prototypes
+global function boolean f_calcula_datos_mensualizados_poblacion (string ls_tipo_doc, double ld_consecutivo, string ls_linea)
+end prototypes
+
+global function boolean f_calcula_datos_mensualizados_poblacion (string ls_tipo_doc, double ld_consecutivo, string ls_linea);string ls_error,ls_id_lote,ls_id_granja,ls_tipo_lote,ls_id_linea,ls_id_lote_copia,ls_id_granja_copia,&
+ls_tipo_lote_copia,ls_id_linea_copia
+boolean lb_primera_vuelta,lb_resultado,lb_primera_semana
+datetime ldt_fecha_produccion,ldt_fecha_produccion_copia
+double ld_saldo_h,ld_saldo_m,ld_edad,ld_consumo_h,ld_consumo_m,ld_dias_faltan,ld_saldo_h_copia,&
+ld_saldo_m_copia,ld_consumo_h_copia,ld_consumo_m_copia,ld_edad_copia,ld_consumo_h_copia_acumulado,&
+ld_consumo_m_copia_acumulado,ld_diferencia
+integer li_mes_copia,li_ano_copia,li_dia_copia,li_dias_mes_copia,li_primer_dia_fecha_produccion
+
+
+DECLARE cursor1 CURSOR FOR  
+SELECT dba.cs_poblacion_simulaciones.fecha_produccion,   
+		dba.cs_poblacion_simulaciones.id_lote,   
+		dba.cs_poblacion_simulaciones.id_granja,   
+		dba.cs_poblacion_simulaciones.tipo_lote,   
+		dba.cs_poblacion_simulaciones.id_linea,   
+		dba.cs_poblacion_simulaciones.saldo_h,   
+		dba.cs_poblacion_simulaciones.saldo_m,   
+		dba.cs_poblacion_simulaciones.edad,   
+		dba.cs_poblacion_simulaciones.consumo_h,   
+		dba.cs_poblacion_simulaciones.consumo_m  
+ FROM dba.cs_poblacion_simulaciones  
+WHERE ( dba.cs_poblacion_simulaciones.id_empresa = :empresa ) AND  
+		( dba.cs_poblacion_simulaciones.tipo_doc = :ls_tipo_doc ) AND  
+		( dba.cs_poblacion_simulaciones.consecutivo = :ld_consecutivo )   
+ORDER BY dba.cs_poblacion_simulaciones.id_lote ASC,   
+		dba.cs_poblacion_simulaciones.id_granja ASC,   
+		dba.cs_poblacion_simulaciones.tipo_lote ASC,   
+		dba.cs_poblacion_simulaciones.fecha_produccion ASC  ;
+
+
+OPEN cursor1;
+IF sqlca.sqlcode <> 0 THEN
+	ls_error=sqlca.sqlerrtext
+	ROLLBACK using sqlca;
+	MessageBox("ERROR","No se pudo abrir cursor sobre la tabla: dba.cs_poblacion_simulaciones. Mensaje: "+ls_error,stopsign!)
+		
+	RETURN False
+END IF
+
+lb_primera_vuelta=True
+lb_primera_semana=True
+
+Do while sqlca.sqlcode =0 
+	
+	Fetch cursor1 into :ldt_fecha_produccion,:ls_id_lote,:ls_id_granja,:ls_tipo_lote,:ls_id_linea,&
+	:ld_saldo_h,:ld_saldo_m,:ld_edad,:ld_consumo_h,:ld_consumo_m;
+	
+	IF sqlca.sqlcode <>0 Then
+		IF sqlca.sqlcode= -1 Then
+			ls_error=sqlca.sqlerrtext
+			ROLLBACK using sqlca;
+			MessageBox("ERROR","No se pudo leer registros de cursor sobre la tabla: dba.cs_poblacion_simulaciones. Mensaje: "+ls_error,stopsign!)
+			RETURN False
+			
+		
+		Else//se acabaron los registros
+		
+		
+			Continue
+		End IF
+		
+	End IF
+	
+	IF lb_primera_vuelta Then
+		
+		ldt_fecha_produccion_copia=ldt_fecha_produccion
+		ls_id_lote_copia=ls_id_lote
+		ls_id_granja_copia=ls_id_granja
+		ls_tipo_lote_copia=ls_tipo_lote
+		lb_primera_vuelta=False
+		
+	End IF
+	
+	
+	IF ls_id_lote=ls_id_lote_copia and ls_id_granja=ls_id_granja_copia and ls_tipo_lote = ls_tipo_lote_copia Then
+	//no ha  cambiado de lote
+	
+		
+		IF month(date(ldt_fecha_produccion)) <> month(date(ldt_fecha_produccion_copia)) Then//hubo cambio de mes
+		
+		
+			li_mes_copia=month(date(ldt_fecha_produccion_copia))
+			li_ano_copia=year(date(ldt_fecha_produccion_copia))
+			li_dia_copia=day(date(ldt_fecha_produccion_copia))
+		
+			li_dias_mes_copia=diasdemes(li_mes_copia,li_ano_copia)
+			
+			IF li_dia_copia=li_dias_mes_copia Then //el corte de la semana anterior fue justo en fin de mes no es necesario 
+			//entonces hacer prorrateo
+			
+	
+			Else//Hay que hacer prorrateo
+	
+				ld_dias_faltan= (li_dias_mes_copia - li_dia_copia)
+	
+				lb_resultado=f_prorrateo(ld_saldo_h,ld_saldo_h_copia,ld_dias_faltan)
+				lb_resultado=f_prorrateo(ld_saldo_m,ld_saldo_m_copia,ld_dias_faltan)
+				
+				lb_resultado=f_prorrateo_diferencia(ld_consumo_h,ld_consumo_h_copia,ld_dias_faltan,ld_diferencia)
+				ld_consumo_h_copia_acumulado=ld_consumo_h_copia_acumulado + ld_diferencia
+				
+				lb_resultado=f_prorrateo_diferencia(ld_consumo_m,ld_consumo_m_copia,ld_dias_faltan,ld_diferencia)			
+				ld_consumo_m_copia_acumulado=ld_consumo_m_copia_acumulado + ld_diferencia
+				
+			End IF
+			
+				ldt_fecha_produccion_copia=datetime(date(li_ano_copia,li_mes_copia,li_dias_mes_copia))
+				
+				  INSERT INTO dba.cs_pobl_simul_mensual  
+				( id_empresa,   
+				  tipo_doc,   
+				  consecutivo,   
+				  fecha_produccion,   
+				  id_lote,   
+				  id_granja,   
+				  tipo_lote,   
+				  id_linea,   
+				  saldo_h,   
+				  saldo_m,   
+				  edad,   
+				  consumo_h,   
+				  consumo_m )  
+	  VALUES ( :empresa,   
+				  :ls_tipo_doc,   
+				  :ld_consecutivo,   
+				  :ldt_fecha_produccion_copia,   
+				  :ls_id_lote_copia,   
+				  :ls_id_granja_copia,   
+				  :ls_tipo_lote_copia,   
+				  :ls_id_linea_copia,   
+				  :ld_saldo_h_copia,   
+				  :ld_saldo_m_copia,   
+				  :ld_edad_copia,   
+				  :ld_consumo_h_copia_acumulado,   
+				  :ld_consumo_m_copia_acumulado )  ;
+	
+					  
+				IF sqlca.sqlcode <>0 Then
+					ls_error=sqlca.sqlerrtext
+					Rollback using sqlca;
+					Messagebox("Error","NO se pudo insertar registros sobre la tabla: dba.cs_pobl_simul_mensual . "+&
+					+"Mensaje: "+ls_error,Stopsign!)
+					Return False
+					
+				End IF
+				
+				
+			lb_primera_semana=True				
+				
+		Else
+			
+			
+			IF not(lb_primera_semana) Then	
+				
+				ld_consumo_h_copia_acumulado=ld_consumo_h_copia_acumulado + ld_consumo_h	
+				ld_consumo_m_copia_acumulado= ld_consumo_m_copia_acumulado + ld_consumo_m
+			
+			End IF
+				
+		
+		End IF
+		
+	Else //cambio de lote. se insertan los registros con la ultima fecha disponible para el lote 
+		//con los valores que traia y en la fecha normal que traia
+	
+			  INSERT INTO dba.cs_pobl_simul_mensual  
+			( id_empresa,   
+			  tipo_doc,   
+			  consecutivo,   
+			  fecha_produccion,   
+			  id_lote,   
+			  id_granja,   
+			  tipo_lote,   
+			  id_linea,   
+			  saldo_h,   
+			  saldo_m,   
+			  edad,   
+			  consumo_h,   
+			  consumo_m )  
+  VALUES ( :empresa,   
+			  :ls_tipo_doc,   
+			  :ld_consecutivo,   
+			  :ldt_fecha_produccion_copia,   
+			  :ls_id_lote_copia,   
+			  :ls_id_granja_copia,   
+			  :ls_tipo_lote_copia,   
+			  :ls_id_linea_copia,   
+			  :ld_saldo_h_copia,   
+			  :ld_saldo_m_copia,   
+			  :ld_edad_copia,   
+			  :ld_consumo_h_copia_acumulado,   
+			  :ld_consumo_m_copia_acumulado )  ;
+
+				  
+			IF sqlca.sqlcode <>0 Then
+				ls_error=sqlca.sqlerrtext
+				Rollback using sqlca;
+				Messagebox("Error","NO se pudo insertar registros sobre la tabla: dba.cs_pobl_simul_mensual . "+&
+				+"Mensaje: "+ls_error,Stopsign!)
+				Return False
+				
+			End IF
+			
+			lb_primera_semana=true//al cambiar de lote es como si se cambiara de mes es decir se considera el mismo
+			//caso de la primera semana
+		
+	End IF
+	
+	IF lb_primera_semana Then 
+		
+		li_primer_dia_fecha_produccion=DAY(date(ldt_fecha_produccion))		
+					
+		lb_resultado=f_prorrateo_produccion_consumo(ld_consumo_h,li_primer_dia_fecha_produccion)		
+		lb_resultado=f_prorrateo_produccion_consumo(ld_consumo_m,li_primer_dia_fecha_produccion)							
+			
+	End IF			
+	
+	//se saca copia de las variables actuales
+	ldt_fecha_produccion_copia=ldt_fecha_produccion
+	ls_id_lote_copia=ls_id_lote
+	ls_id_granja_copia=ls_id_granja
+	ls_tipo_lote_copia=ls_tipo_lote
+	ls_id_linea_copia=ls_id_linea
+	ld_saldo_h_copia=ld_saldo_h
+	ld_saldo_m_copia=ld_saldo_m
+	ld_edad_copia=ld_edad
+	ld_consumo_h_copia=ld_consumo_h
+	ld_consumo_m_copia=ld_consumo_m
+
+	IF lb_primera_semana Then 
+
+		ld_consumo_h_copia_acumulado=ld_consumo_h
+		ld_consumo_m_copia_acumulado=ld_consumo_m
+		
+		lb_primera_semana=False
+	
+	End IF
+	
+	
+Loop
+
+//Se procesa ultimo registro siempre y cuando no se haya presentado cambio de mes en el registro inmediatamente
+//anterior. Este seria el caso en el que la simulacion terminara justo en la primera semana de un mes.
+//aqui lo unico que se hace es insertar el ultimo registro con la fecha normal que traia y con los valores
+//que traia
+
+//IF not(lb_cambio_mes) Then
+	
+	//li_mes_copia=month(date(ldt_fecha_produccion_copia))
+	//li_ano_copia=year(date(ldt_fecha_produccion_copia))
+	//li_dia_copia=day(date(ldt_fecha_produccion_copia))
+
+	//li_dias_mes_copia=diasdemes(li_mes_copia,li_ano_copia)
+	
+	//ldt_fecha_produccion_copia=datetime(date(li_ano_copia,li_mes_copia,li_dias_mes_copia))
+	
+		  INSERT INTO dba.cs_pobl_simul_mensual  
+		( id_empresa,   
+		  tipo_doc,   
+		  consecutivo,   
+		  fecha_produccion,   
+		  id_lote,   
+		  id_granja,   
+		  tipo_lote,   
+		  id_linea,   
+		  saldo_h,   
+		  saldo_m,   
+		  edad,   
+		  consumo_h,   
+		  consumo_m )  
+	VALUES ( :empresa,   
+		 		:ls_tipo_doc,   
+	  	      :ld_consecutivo,   
+		 		:ldt_fecha_produccion_copia,   
+		  		:ls_id_lote_copia,   
+		  		:ls_id_granja_copia,   
+		  		:ls_tipo_lote_copia,   
+		  		:ls_id_linea_copia,   
+		  		:ld_saldo_h_copia,   
+		  		:ld_saldo_m_copia,   
+		  		:ld_edad_copia,   
+		  		:ld_consumo_h_copia_acumulado,   
+		  		:ld_consumo_m_copia_acumulado )  ;
+
+		  
+	IF sqlca.sqlcode <>0 Then
+		ls_error=sqlca.sqlerrtext
+		Rollback using sqlca;
+		Messagebox("Error","NO se pudo insertar registros sobre la tabla: dba.cs_pobl_simul_mensual . "+&
+		+"Mensaje: "+ls_error,Stopsign!)
+		Return False
+		
+	End IF
+	
+//End IF
+
+			
+Commit using sqlca;
+
+Return True
+
+end function
